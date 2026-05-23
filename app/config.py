@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     # Sessions
     session_ttl_seconds: int = 86400
 
+    # Logging
+    log_level: str = "INFO"
+    environment: str = "development"
+
     model_config = SettingsConfigDict(
         env_file=Path(__file__).parent.parent / ".env",
         env_file_encoding="utf-8",

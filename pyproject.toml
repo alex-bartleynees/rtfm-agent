@@ -13,7 +13,9 @@ dependencies = [
     "pydantic-settings>=2.0", # for config.py
     "tiktoken>=0.7",          # token counting in chunker
     "watchfiles>=0.21",       # async folder watcher
-    "python-multipart>=0.0.9" # for file upload endpoint later
+    "python-multipart>=0.0.9", # for file upload endpoint later
+    "beautifulsoup4>=4.12",
+    "python-json-logger>=2.0"
 ]
 
 [dependency-groups]
