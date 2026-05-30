@@ -1,7 +1,4 @@
-from contextlib import asynccontextmanager
-
 import redis.asyncio as aioredis
-from fastapi import FastAPI
 from psycopg_pool import AsyncConnectionPool
 
 from app.config import settings
@@ -57,12 +54,3 @@ def get_redis() -> aioredis.Redis:
     if _redis_client is None:
         raise RuntimeError("Redis not initialised")
     return _redis_client
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await init_postgres()
-    await init_redis()
-    yield
-    await close_postgres()
-    await close_redis()

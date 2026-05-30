@@ -6,7 +6,8 @@ import logging
 
 from fastapi import FastAPI
 
-from app.db import get_pg_pool, get_redis, lifespan
+from app.db import get_pg_pool, get_redis
+from app.lifespan import lifespan
 from app.middleware import RequestIDMiddleware
 
 logger = logging.getLogger(__name__)
