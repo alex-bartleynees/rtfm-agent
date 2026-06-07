@@ -7,3 +7,8 @@ class Chunk:
     text: str
     source: Path
     position: int
+
+
+@dataclass
+class EmbeddedChunk(Chunk):
+    embedding: list[float]

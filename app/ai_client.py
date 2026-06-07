@@ -1,8 +1,8 @@
 from openai import AsyncOpenAI
 
-_ai_client: AsyncOpenAI | None = None
-
 from app.config import settings
+
+_ai_client: AsyncOpenAI | None = None
 
 
 async def init_ai_client():
@@ -18,3 +18,9 @@ async def close_ai_client():
         await _ai_client.close()
         _ai_client = None
         print("AI client closed")
+
+
+def get_ai_client() -> AsyncOpenAI:
+    if _ai_client is None:
+        raise RuntimeError("AI client not initialised")
+    return _ai_client
