@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS documents (
     heading     TEXT,
     content     TEXT NOT NULL,
     embedding   vector(768),
-    created_at  TIMESTAMPTZ DEFAULT now()
+    created_at  TIMESTAMPTZ DEFAULT now(),
     UNIQUE (source_file, chunk_index)
 );
 
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS ingested_files (
     source_file  TEXT        NOT NULL UNIQUE,
     content_hash TEXT        NOT NULL,
     chunk_count  INTEGER     NOT NULL DEFAULT 0,
-    ingested_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    ingested_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
