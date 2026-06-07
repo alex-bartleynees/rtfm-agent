@@ -17,9 +17,10 @@ async def ingest_documents(docs_dir: str):
         if text is not None:
             chunk_count = 0
             content_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
+            if await check_if_ingested(file_path, content_hash):
+                continue  # Skip already ingested files
             async with get_pg_pool().connection() as conn:
-                if await check_if_ingested(conn, file_path, content_hash):
-                    continue  # Skip already ingested files
+
                 async for embedded_chunk in embed_chunks(chunk_text(file_path, text)):
                     await save_embedded_chunk(conn, embedded_chunk)
                     chunk_count += 1
@@ -46,16 +47,15 @@ async def save_embedded_chunk(conn: AsyncConnection, embedded_chunk: EmbeddedChu
     )
 
 
-async def check_if_ingested(
-    conn: AsyncConnection, file_path: Path, content_hash: str
-) -> bool:
-    cursor = conn.cursor()
-    await cursor.execute(
-        "SELECT 1 from ingested_files WHERE source_file = %s AND content_hash = %s",
-        (file_path.as_posix(), content_hash),
-    )
-    row = await cursor.fetchone()
-    return row is not None
+async def check_if_ingested(file_path: Path, content_hash: str) -> bool:
+    async with get_pg_pool().connection() as conn:
+        cursor = conn.cursor()
+        await cursor.execute(
+            "SELECT 1 from ingested_files WHERE source_file = %s AND content_hash = %s",
+            (file_path.as_posix(), content_hash),
+        )
+        row = await cursor.fetchone()
+        return row is not None
 
 
 async def mark_as_ingested(
