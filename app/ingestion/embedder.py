@@ -1,14 +1,16 @@
 import itertools
 from typing import AsyncGenerator, Iterable
 
-from app.ai_client import get_ai_client
+from openai import AsyncOpenAI
+
 from app.config import settings
 from app.ingestion.models import Chunk, EmbeddedChunk
 
 
-async def embed_chunks(chunks: Iterable[Chunk]) -> AsyncGenerator[EmbeddedChunk, None]:
+async def embed_chunks(
+    chunks: Iterable[Chunk], client: AsyncOpenAI
+) -> AsyncGenerator[EmbeddedChunk, None]:
     """Embed a list of chunks using the embedding model."""
-    client = get_ai_client()
     for batch in itertools.batched(chunks, 32):
         embeddings = await client.embeddings.create(
             model=settings.embedding_model, input=[chunk.text for chunk in batch]

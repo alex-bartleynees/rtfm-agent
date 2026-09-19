@@ -25,6 +25,8 @@ dev = [
     "httpx>=0.27",            # for FastAPI test client
     "ruff>=0.4",
     "pytest-mock>=3.14",      # useful for mocking Ollama in tests
+    "testcontainers[postgres]>=4.15",
+    "psycopg[binary]>=3.3.4",
 ]
 
 [build-system]
@@ -33,3 +35,10 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "integration: tests that need Docker (deselect with '-m \"not integration\"')",
+]

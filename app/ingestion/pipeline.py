@@ -1,15 +1,18 @@
 import hashlib
 from pathlib import Path
 
+from openai import AsyncOpenAI
 from psycopg.connection_async import AsyncConnection
+from psycopg_pool import AsyncConnectionPool
 
-from app.db import get_pg_pool
 from app.ingestion.chunker import chunk_text, extract_text_from_file, iter_files
 from app.ingestion.embedder import embed_chunks
 from app.ingestion.models import EmbeddedChunk
 
 
-async def ingest_documents(docs_dir: str):
+async def ingest_documents(
+    docs_dir: str, client: AsyncOpenAI, pool: AsyncConnectionPool
+):
     """Ingest documents from the specified directory, chunk them, and embed the chunks."""
 
     for file_path in iter_files(Path(docs_dir)):
@@ -17,11 +20,12 @@ async def ingest_documents(docs_dir: str):
         if text is not None:
             chunk_count = 0
             content_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
-            if await check_if_ingested(file_path, content_hash):
+            if await check_if_ingested(pool, file_path, content_hash):
                 continue  # Skip already ingested files
-            async with get_pg_pool().connection() as conn:
-
-                async for embedded_chunk in embed_chunks(chunk_text(file_path, text)):
+            async with pool.connection() as conn:
+                async for embedded_chunk in embed_chunks(
+                    chunk_text(file_path, text), client
+                ):
                     await save_embedded_chunk(conn, embedded_chunk)
                     chunk_count += 1
                 await mark_as_ingested(conn, file_path, content_hash, chunk_count)
@@ -47,8 +51,10 @@ async def save_embedded_chunk(conn: AsyncConnection, embedded_chunk: EmbeddedChu
     )
 
 
-async def check_if_ingested(file_path: Path, content_hash: str) -> bool:
-    async with get_pg_pool().connection() as conn:
+async def check_if_ingested(
+    pool: AsyncConnectionPool, file_path: Path, content_hash: str
+) -> bool:
+    async with pool.connection() as conn:
         cursor = conn.cursor()
         await cursor.execute(
             "SELECT 1 from ingested_files WHERE source_file = %s AND content_hash = %s",
