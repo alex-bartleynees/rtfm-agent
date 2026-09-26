@@ -15,7 +15,8 @@ dependencies = [
     "watchfiles>=0.21",       # async folder watcher
     "python-multipart>=0.0.9", # for file upload endpoint later
     "beautifulsoup4>=4.12",
-    "python-json-logger>=2.0"
+    "python-json-logger>=2.0",
+    "watchdog>=6.0.0",
 ]
 
 [dependency-groups]

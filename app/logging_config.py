@@ -42,6 +42,6 @@ def configure_logging() -> None:
             "uvicorn.error": {"propagate": True},
             "httpx": {"level": "WARNING", "propagate": True},
             "asyncpg": {"level": "WARNING", "propagate": True},
-            "app.ingestion": {"level": "DEBUG", "propagate": True},
+            "app.ingestion": {"level": "NOTSET", "propagate": True},
         },
     })

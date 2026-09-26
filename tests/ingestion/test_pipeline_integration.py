@@ -11,7 +11,7 @@ from psycopg_pool import AsyncConnectionPool
 from testcontainers.community.postgres import PostgresContainer
 
 from app.config import settings
-from app.ingestion.pipeline import ingest_documents
+from app.ingestion.pipeline import ingest_documents, ingest_file
 
 pytestmark = pytest.mark.integration
 
@@ -233,3 +233,30 @@ async def test_ingested_embeddings_are_searchable_by_cosine_distance(
 
     # Assert
     assert rows[0][0] == (docs_dir / "nested" / "page.html").as_posix()
+
+
+async def test_shorter_file_removes_old_chunks(pool, client, tmp_path):
+    path = tmp_path / "shrinking.md"
+    path.write_text(("A paragraph of text. " * 50 + "\n\n") * 6)
+    await ingest_file(path, client, pool)
+    before = await fetch_all(pool, "SELECT count(*) FROM documents")
+    assert before[0][0] > 1
+    path.write_text("Short replacement.")
+    await ingest_file(path, client, pool)
+    rows = await fetch_all(pool, "SELECT content FROM documents")
+    assert rows == [("Short replacement.",)]
+
+
+async def test_embedding_failure_preserves_existing_file(pool, client, tmp_path, monkeypatch):
+    path = tmp_path / "stable.md"
+    path.write_text("Original content.")
+    await ingest_file(path, client, pool)
+    path.write_text("Changed content.")
+
+    async def fail(**kwargs):
+        raise RuntimeError("embedding failure")
+
+    monkeypatch.setattr(client.embeddings, "create", fail)
+    with pytest.raises(RuntimeError, match="embedding failure"):
+        await ingest_file(path, client, pool)
+    assert await fetch_all(pool, "SELECT content FROM documents") == [("Original content.",)]

@@ -16,6 +16,12 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(RequestIDMiddleware)
 
 
+@app.get("/ingestion/status")
+async def ingestion_status():
+    watcher = app.state.file_watcher
+    return {**watcher.status, "queued": len(watcher.pending)}
+
+
 @app.get("/health")
 async def health():
     try:

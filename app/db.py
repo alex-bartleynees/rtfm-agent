@@ -1,7 +1,11 @@
+import logging
+
 import redis.asyncio as aioredis
 from psycopg_pool import AsyncConnectionPool
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 _pg_pool: AsyncConnectionPool | None = None
 _redis_client: aioredis.Redis | None = None
@@ -15,7 +19,7 @@ async def init_postgres():
     )
     await _pg_pool.open()
     await _pg_pool.wait()
-    print("Postgres connection pool initialized")
+    logger.info("Postgres connection pool initialized")
 
 
 async def init_redis():
@@ -25,7 +29,7 @@ async def init_redis():
         connection_string, encoding="utf-8", decode_responses=True
     )
     pong = await _redis_client.ping()
-    print(f"Redis client initialized: {pong}")
+    logger.info("Redis client initialized: %s", pong)
 
 
 async def close_postgres():
@@ -33,7 +37,7 @@ async def close_postgres():
     if _pg_pool:
         await _pg_pool.close()
         _pg_pool = None
-        print("Postgres connection pool closed")
+        logger.info("Postgres connection pool closed")
 
 
 async def close_redis():
@@ -41,7 +45,7 @@ async def close_redis():
     if _redis_client:
         await _redis_client.aclose()
         _redis_client = None
-        print("Redis client closed")
+        logger.info("Redis client closed")
 
 
 def get_pg_pool() -> AsyncConnectionPool:

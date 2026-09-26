@@ -19,6 +19,7 @@ class Settings(BaseSettings):
 
     # Ingestion
     docs_dir: str
+    docs_ignore_patterns: list[str] = [".obsidian", ".git", ".trash", ".tmp-*", "*.tmp", "~*"]
     plain_text_formats: list[str] = ["txt", "md"]
     markup_formats: list[str] = ["html"]
     supported_file_types: list[str] = plain_text_formats + markup_formats

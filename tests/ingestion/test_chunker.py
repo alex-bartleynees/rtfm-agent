@@ -64,6 +64,21 @@ def test_chunk_text_overlap_carries_tail(mock_settings):
     # Assert
     assert chunks[1].text.startswith(chunks[0].text[-8:].strip())
 
+def test_chunk_text_without_double_newline(mock_settings):
+    # Arrange
+    mock_settings.chunk_size = 3
+    mock_settings.chunk_overlap = 2
+    source = Path("doc.md")
+    text = "This is a long text without double newlines.Let's see how it gets chunked.Let's see how it gets chunked.Let's see how it gets chunked."
+    max_chars = mock_settings.chunk_size * 4
+
+    # Act
+    chunks = list(chunk_text(source, text))
+
+    # Assert
+    for chunk in chunks:
+        assert len(chunk.text) <= max_chars 
+
 
 def test_chunk_text_empty_string():
     # Arrange

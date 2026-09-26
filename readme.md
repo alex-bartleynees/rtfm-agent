@@ -25,7 +25,27 @@ Request
                                       └─► Async memory extraction → Postgres
 ```
 
-**Ingestion:** watched folder (`DOCS_DIR`) or `POST /ingest/file` → chunk → embed → pgvector.
+**Ingestion:** watched folder (`DOCS_DIR`) → chunk → embed → pgvector.
+
+The folder watcher starts a background scan on startup, skips unchanged content,
+and then queues individual changed files after one second without another event.
+One worker processes the queue; failed files get two retries. File moves and
+deletions are reconciled, including files removed while the app was offline.
+Run a single API worker so only one ingestion worker watches the directory.
+Progress and cumulative counters are available at `GET /ingestion/status`.
+
+Configure exclusions in `.env` as a JSON array (restart after changes):
+
+```dotenv
+DOCS_IGNORE_PATTERNS='[".obsidian", ".git", ".trash", ".tmp-*", "*.tmp", "~*", "private", "drafts/*", "secret.md"]'
+```
+
+This replaces the defaults (the first six patterns above). Names without `/`
+match files or directories at any depth. Patterns containing `/` match paths
+relative to `DOCS_DIR`; `*` can span path separators. Matching a directory excludes
+its descendants. Matching is case-sensitive; negation rules are not supported.
+Ignored files are excluded from both startup scans and file events; previously
+indexed files that become ignored are removed during startup reconciliation.
 
 ## Prerequisites
 
